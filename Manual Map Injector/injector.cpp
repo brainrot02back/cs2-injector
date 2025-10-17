@@ -1,14 +1,9 @@
 #include "injector.h"
-#include <stdio.h>
-#include <string>
-#include <iostream>
-
-using namespace std;
-#include <iostream>
 #include <windows.h>
 #include <thread>
 #include <chrono>
 #include <string>
+#include <random>
 
 #if defined(DISABLE_OUTPUT)
 #define ILog(data, ...)
@@ -21,26 +16,9 @@ using namespace std;
 #else
 #define CURRENT_ARCH IMAGE_FILE_MACHINE_I386
 #endif
+
 void setColor(int color) {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
-
-	//Black     	0	
-	//Dark Blue 	1	
-	//Dark Green	2	
-	//Dark Aqua	    3	
-	//Dark Red  	4	
-	//Dark Purple	5	
-	//Dark Yellow   6	
-	//Gray      	7	
-	//Dark Gray 	8	
-	//Blue	        9	
-	//Green	        10	
-	//Aqua	        11	
-	//Red	        12	
-	//Purple    	13	
-	//Yellow    	14	
-	//White	        15	
-
 }
 
 void typeEffect(const std::string& message, int delay_ms) {
@@ -49,6 +27,7 @@ void typeEffect(const std::string& message, int delay_ms) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
 	}
 }
+
 bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeader, bool ClearNonNeededSections, bool AdjustProtections, bool SEHExceptionSupport, DWORD fdwReason, LPVOID lpReserved) {
 	IMAGE_NT_HEADERS* pOldNtHeader = nullptr;
 	IMAGE_OPTIONAL_HEADER* pOldOptHeader = nullptr;
@@ -57,7 +36,6 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	system("chcp 65001 >NUL");
 
 	setColor(10);
-
 	typeEffect("[+] Welcome to H-zz-H Injector!\n", 20);
 
 	setColor(10);
@@ -95,7 +73,7 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	data.pGetProcAddress = GetProcAddress;
 #ifdef _WIN64
 	data.pRtlAddFunctionTable = (f_RtlAddFunctionTable)RtlAddFunctionTable;
-#else 
+#else
 	SEHExceptionSupport = false;
 #endif
 	data.pbase = pTargetBase;
@@ -103,11 +81,9 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	data.reservedParam = lpReserved;
 	data.SEHSupport = SEHExceptionSupport;
 
-
-	//File header
+	// File header
 	if (!WriteProcessMemory(hProc, pTargetBase, pSrcData, 0x1000, nullptr)) {
 		setColor(4);
-		//only first 0x1000 bytes for the header
 		ILog("Can't write file header 0x%X\n", GetLastError());
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
 		return false;
@@ -125,7 +101,7 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 		}
 	}
 
-	//Mapping params
+	// Mapping params
 	BYTE* MappingDataAlloc = reinterpret_cast<BYTE*>(VirtualAllocEx(hProc, nullptr, sizeof(MANUAL_MAPPING_DATA), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	if (!MappingDataAlloc) {
 		setColor(4);
@@ -142,7 +118,7 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 		return false;
 	}
 
-	//Shell code
+	// Shell code
 	void* pShellcode = VirtualAllocEx(hProc, nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	if (!pShellcode) {
 		setColor(4);
@@ -165,10 +141,10 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	ILog("by\n", MappingDataAlloc);
 	ILog("H-zz-H\n", pShellcode);
 
-	ILog("https://discord.gg/HNYaKzKZQU\n");
+	ILog("https://discord.gg/updatedthis\n");
 
 #ifdef _DEBUG
-	ILog("https://discord.gg/HNYaKzKZQU\n", Shellcode);
+	ILog("https://discord.gg/brainrot02updatedts\n", Shellcode);
 	ILog("Finished Injecting...\n", pShellcode);
 	system("pause");
 #endif
@@ -184,7 +160,7 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	}
 	CloseHandle(hThread);
 
-	ILog("[+] Succesfully injected into your Process\n", pShellcode);
+	ILog("[+] Successfully injected into your Process\n", pShellcode);
 
 	HINSTANCE hCheck = NULL;
 	while (!hCheck) {
@@ -224,15 +200,14 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	}
 	memset(emptyBuffer, 0, 1024 * 1024 * 20);
 
-	//CLEAR PE HEAD
+	// CLEAR PE HEAD
 	if (ClearHeader) {
 		if (!WriteProcessMemory(hProc, pTargetBase, emptyBuffer, 0x1000, nullptr)) {
 			setColor(4);
 			ILog("WARNING!: Can't clear HEADER\n");
 		}
 	}
-	//END CLEAR PE HEAD
-
+	// END CLEAR PE HEAD
 
 	if (ClearNonNeededSections) {
 		pSectionHeader = IMAGE_FIRST_SECTION(pOldNtHeader);
@@ -291,6 +266,7 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 		ILog("WARNING: can't release mapping data memory\n");
 	}
 
+	free(emptyBuffer);
 	return true;
 }
 
