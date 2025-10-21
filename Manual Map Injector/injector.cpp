@@ -1,9 +1,11 @@
 #include "injector.h"
+#include <stdio.h>
+#include <string>
+#include <iostream>
 #include <windows.h>
 #include <thread>
 #include <chrono>
 #include <string>
-#include <random>
 
 #if defined(DISABLE_OUTPUT)
 #define ILog(data, ...)
@@ -39,7 +41,6 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	typeEffect("[+] Welcome to H-zz-H Injector!\n", 20);
 
 	setColor(10);
-
 	if (reinterpret_cast<IMAGE_DOS_HEADER*>(pSrcData)->e_magic != 0x5A4D) { //"MZ"
 		setColor(4);
 		ILog("Invalid file\n");
@@ -81,7 +82,6 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	data.reservedParam = lpReserved;
 	data.SEHSupport = SEHExceptionSupport;
 
-	// File header
 	if (!WriteProcessMemory(hProc, pTargetBase, pSrcData, 0x1000, nullptr)) {
 		setColor(4);
 		ILog("Can't write file header 0x%X\n", GetLastError());
@@ -101,7 +101,6 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 		}
 	}
 
-	// Mapping params
 	BYTE* MappingDataAlloc = reinterpret_cast<BYTE*>(VirtualAllocEx(hProc, nullptr, sizeof(MANUAL_MAPPING_DATA), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	if (!MappingDataAlloc) {
 		setColor(4);
@@ -118,7 +117,6 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 		return false;
 	}
 
-	// Shell code
 	void* pShellcode = VirtualAllocEx(hProc, nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	if (!pShellcode) {
 		setColor(4);
@@ -141,10 +139,10 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	ILog("by\n", MappingDataAlloc);
 	ILog("H-zz-H\n", pShellcode);
 
-	ILog("https://discord.gg/updatedthis\n");
+	ILog("https://discord.gg/HNYaKzKZQU\n");
 
 #ifdef _DEBUG
-	ILog("https://discord.gg/brainrot02updatedts\n", Shellcode);
+	ILog("https://discord.gg/HNYaKzKZQU\n", Shellcode);
 	ILog("Finished Injecting...\n", pShellcode);
 	system("pause");
 #endif
@@ -200,14 +198,12 @@ bool ManualMapDll(HANDLE hProc, BYTE* pSrcData, SIZE_T FileSize, bool ClearHeade
 	}
 	memset(emptyBuffer, 0, 1024 * 1024 * 20);
 
-	// CLEAR PE HEAD
 	if (ClearHeader) {
 		if (!WriteProcessMemory(hProc, pTargetBase, emptyBuffer, 0x1000, nullptr)) {
 			setColor(4);
 			ILog("WARNING!: Can't clear HEADER\n");
 		}
 	}
-	// END CLEAR PE HEAD
 
 	if (ClearNonNeededSections) {
 		pSectionHeader = IMAGE_FIRST_SECTION(pOldNtHeader);
